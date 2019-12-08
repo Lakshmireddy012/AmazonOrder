@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.example.demo.model.OrderShipped;
+
 public class AWSDBConnection {
 
 	private static final String PUBLIC_DNS = "mydatabase1.cpxzs2rub2zs.eu-west-3.rds.amazonaws.com";
@@ -17,14 +19,14 @@ public class AWSDBConnection {
 	private static final String DATABASE = "orderDataBase";
 	private static final String REMOTE_DATABASE_USERNAME = "rubenaz";
 	private static final String DATABASE_USER_PASSWORD = "gSo5f#9f5";
-
+	
 	// for testing
 	public static void main(String[] args) {
 //		Connection connection=connectJDBCToAWSEC2();
 //		if(connection!=null) {
 //			runTestQuery();
 //		}
-	//	isOrderNumberExist("Hi");
+		isOrderNumberExist("19120310503EGFX");
 	//	insertOrderNumber("test ","test");
 	//	fetchAllData();
 //		ArrayList<String> cDiscountOrderNumbers=new ArrayList<String>();
@@ -80,6 +82,7 @@ public class AWSDBConnection {
 			rs.close();
 			statement.close();
 			connection.close();
+			System.out.println("val"+status);
 		} catch (SQLException se) {
 			// Handle errors for JDBC
 			se.printStackTrace();
@@ -235,5 +238,61 @@ public class AWSDBConnection {
 
 	    // Return the modified comma-delimited list of parameters.
 	    return sql;
+	}
+	
+	public static Map<String,OrderShipped> getAllOrderNumber(String tableName) {
+		Map<String,OrderShipped> orderNumbersMap=new HashMap<String, OrderShipped>();
+		Connection connection = connectJDBCToAWSEC2();
+		PreparedStatement statement = null;
+		try {
+			String sql = "select * from orderDataBase."+tableName;
+			statement = connection.prepareStatement(sql);
+			ResultSet rs = statement.executeQuery();
+			while(rs.next()) {
+				if(tableName.equalsIgnoreCase("order_shipped")) {
+					OrderShipped ob=new OrderShipped(rs.getString("order_number"), 
+							rs.getString("shipped"), 
+							rs.getString("tracking_number"), 
+							rs.getString("trackingurl"), 
+							rs.getString("transporter_name"), 
+							rs.getString("vendor_number"));
+					orderNumbersMap.put(rs.getString("order_number"), ob);
+				}
+				else {
+					OrderShipped ob=new OrderShipped(rs.getString("order_number"), 
+							rs.getString("shipped"), 
+							null, 
+							rs.getString("tracking_url"), 
+							null, 
+							rs.getString("vendor_number"));
+					orderNumbersMap.put(rs.getString("order_number"), ob);
+				}
+				
+			}
+			rs.close();
+			statement.close();
+			connection.close();
+		} catch (SQLException se) {
+			// Handle errors for JDBC
+			se.printStackTrace();
+		} catch (Exception e) {
+			// Handle errors for Class.forName
+			e.printStackTrace();
+		} finally {
+			
+			// finally block used to close resources
+			try {
+				if (statement != null)
+					statement.close();
+			} catch (SQLException se2) {
+			} // nothing we can do
+			try {
+				if (connection != null)
+					connection.close();
+			} catch (SQLException se) {
+				se.printStackTrace();
+			} // end finally try
+		} // end try
+		return orderNumbersMap;
 	}
 }

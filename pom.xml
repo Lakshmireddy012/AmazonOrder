@@ -95,6 +95,12 @@
 			<version>6.11.0</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-firestore</artifactId>
+			<version>1.30.0</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

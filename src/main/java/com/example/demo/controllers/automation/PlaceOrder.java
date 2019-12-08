@@ -15,8 +15,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
-import com.utils.AWSDBConnection;
+import com.utils.FirebaseUtils;
 import com.utils.SOAPClientSAAJ;
 
 public class PlaceOrder implements Runnable {
@@ -55,10 +54,11 @@ public class PlaceOrder implements Runnable {
 			for (int i = 0; i < ordersArray.length(); i++) {
 				currentOrderInfo = ordersArray.getJSONObject(i);
 				orderNumber = key;
+				System.out.println("order number"+key);
 				if (currentOrderInfo.has("OrderNumber") && currentOrderInfo.get("OrderNumber").equals(key)) {
 					String url="";
 					// check order present in db
-					if (AWSDBConnection.isOrderNumberExist(orderNumber)) {
+					if (FirebaseUtils.isOrderNumberExist(orderNumber)) {
 						System.out.println("Order already exist in Database " + orderNumber);
 						logger.info(orderNumber+", Order already exist in Database");
 					} else {
@@ -148,7 +148,14 @@ public class PlaceOrder implements Runnable {
 		if(signInSubmitElements.size()>0) {
 			signInSubmitElements.get(0).click();
 		}
-		if(passwordElements.size()>0 || signInSubmitElements.size()>0)  {
+//		if(passwordElements.size()>0 || signInSubmitElements.size()>0)  {
+//			commonMethods.prompt("Get the code and push it please and click resume");
+//		}
+		commonMethods.forceWait((long) 2000);
+		// verification requested
+		List<WebElement> cartCountElements = commonMethods.getAllElements(driver, wait, By.xpath("//h1[contains(.,'Vérification')]"));
+		List<WebElement> continueButton = commonMethods.getAllElements(driver, wait, By.id("continue"));
+		if (continueButton.size() != 0 || cartCountElements.size()!=0) {
 			commonMethods.prompt("Get the code and push it please and click resume");
 		}
 	}
@@ -392,7 +399,7 @@ public class PlaceOrder implements Runnable {
 				.waitAndGet(driver, wait, By.xpath("//h5[contains(.,'Numéro de commande')]//child::span")).getText();
 		System.out.println("order and venodr number" + orderNumber + vendorNumber);
 		logger.info(orderNumber+","+vendorNumber);
-		AWSDBConnection.insertOrderNumber(orderNumber, vendorNumber);
+		FirebaseUtils.insertOrderNumber(orderNumber, vendorNumber);
 	}
 
 	public void intilizeOrderInfo() {

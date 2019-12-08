@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 import org.json.JSONObject;
@@ -17,6 +16,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.utils.AWSDBConnection;
+import com.utils.FirebaseUtils;
 import com.utils.SOAPClientSAAJ;
 
 
@@ -53,7 +53,7 @@ public class ScrapeTrackingNumber {
 			initProps();
 			login();
 			scrapeOrderNumber();
-			Map<String,String> orderNumbersMap=AWSDBConnection.getAllOrderNumber(cDiscoundOrderNumbers,"order_shipped");
+			Map<String,String> orderNumbersMap=FirebaseUtils.getAllOrderNumber(cDiscoundOrderNumbers,"order_shipped");
 			// just for log
 			for (String orderNumber : orderNumbersMap.keySet()) {
 				logger.info(orderNumber+":"+orderNumbersMap.get(orderNumber));

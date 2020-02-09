@@ -53,7 +53,7 @@ public class ScrapeTrackingNumber {
 			initProps();
 			login();
 			scrapeOrderNumber();
-			Map<String,String> orderNumbersMap=FirebaseUtils.getAllOrderNumber(cDiscoundOrderNumbers,"order_shipped");
+			Map<String,String> orderNumbersMap=FirebaseUtils.getAllOrderNumber(cDiscoundOrderNumbers, "order_shipped");
 			// just for log
 			for (String orderNumber : orderNumbersMap.keySet()) {
 				logger.info(orderNumber+":"+orderNumbersMap.get(orderNumber));
@@ -96,6 +96,11 @@ public class ScrapeTrackingNumber {
 
 	public void login() {
 		driver.get("https://seller.cdiscount.com/login");
+		// accept cookies if alert present
+		List<WebElement> acceptCookies=commonMethods.getAllElements(driver, wait, By.xpath("//button[contains(.,'Accepter')]"));
+		if(acceptCookies.size()>0) {
+			acceptCookies.get(0).click();
+		}
 		commonMethods.waitAndGet(driver, wait, By.id("Login")).sendKeys(username);
 		commonMethods.waitAndGet(driver, wait, By.id("Password")).sendKeys(password);
 		commonMethods.waitAndGet(driver, wait, By.id("save")).click();

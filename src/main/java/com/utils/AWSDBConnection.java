@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -255,7 +256,7 @@ public class AWSDBConnection {
 							rs.getString("tracking_number"), 
 							rs.getString("trackingurl"), 
 							rs.getString("transporter_name"), 
-							rs.getString("vendor_number"));
+							rs.getString("vendor_number"),new Date());
 					orderNumbersMap.put(rs.getString("order_number"), ob);
 				}
 				else {
@@ -264,7 +265,7 @@ public class AWSDBConnection {
 							null, 
 							rs.getString("tracking_url"), 
 							null, 
-							rs.getString("vendor_number"));
+							rs.getString("vendor_number"),new Date());
 					orderNumbersMap.put(rs.getString("order_number"), ob);
 				}
 				

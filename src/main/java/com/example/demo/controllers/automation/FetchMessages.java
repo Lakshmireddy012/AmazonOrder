@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,7 +41,7 @@ public class FetchMessages {
 	WebDriverWait wait;
 	WebDriver driver;
 	
-	Map<String , ChatInfo> chatInfoMap=new HashMap<String, ChatInfo>();
+	Map<String , ArrayList<ChatInfo>> chatInfoMap=new HashMap<String, ArrayList<ChatInfo>>();
 	
 	public static void main(String[] args) {
 		new FetchMessages().startFetchMessages();
@@ -105,6 +106,7 @@ public class FetchMessages {
 		driver.get(url);
 		List<WebElement> inbox=commonMethods.getAllElements(driver, wait, By.xpath("//*[@id='MessagesListContainer']/li/a"));
 		System.out.println("inbox "+ inbox.size());
+		ArrayList<ChatInfo> chatInfoList=new ArrayList<ChatInfo>();
 		for (int j = 1; j <= inbox.size(); j++) {
 			List<WebElement> msgDate=commonMethods.getAllElements(driver, wait, By.xpath("//*[@id='MessagesListContainer']/li["+j+"]/a//div[@class='mListDate']"));
 			List<WebElement> name=commonMethods.getAllElements(driver, wait, By.xpath("//*[@id='MessagesListContainer']/li["+j+"]/a//h2"));
@@ -123,7 +125,6 @@ public class FetchMessages {
 			if(orderRelated.size()>0)
 			 orderRelatesVal=orderRelated.get(0).getText();
 			inbox.get(j-1).click();
-			
 			commonMethods.forceWait((long) 3000);
 			commonMethods.waitAndGet(driver, wait, By.xpath("//*[@onclick='SlideDownAll()']")).click();
 			List<WebElement> listOfMessages=commonMethods.getAllElements(driver, wait, By.xpath("//*[@id='messageChat']//ul[@class='mChatList']/li"));
@@ -171,14 +172,14 @@ public class FetchMessages {
 				Message message=new Message(chatHeaderVal, chatDateVal, dataTimeVal, content);
 				msgList.add(message);
 			}
-			ChatInfo chatInfo=new ChatInfo(orderNumber, subjectVal, nameVal, orderRelatesVal, msgDateVal, msgList);
-			chatInfoMap.put(orderNumber, chatInfo);
+			ChatInfo chatInfo=new ChatInfo(orderNumber, subjectVal, nameVal, orderRelatesVal, msgDateVal, msgList,new Date());
+			chatInfoList.add(chatInfo);
 		}
+		chatInfoMap.put(orderNumber, chatInfoList);
 	}
 	public void saveToFirebase() {
 		try {
 			FileInputStream refreshToken = new FileInputStream("files/refreshToken.json");
-
 			FirebaseOptions options = new FirebaseOptions.Builder()
 			    .setCredentials(GoogleCredentials.fromStream(refreshToken))
 			    .setDatabaseUrl("https://artificialpermissionsolutions.firebaseio.com")
@@ -187,10 +188,12 @@ public class FetchMessages {
 			FirebaseApp.initializeApp(options);
 			Firestore db = FirestoreClient.getFirestore();
 			WriteBatch batch = db.batch();
-			for (String key : chatInfoMap.keySet()) {
-				DocumentReference nycRef = db.collection("messages").document(key);
-				batch.set(nycRef, chatInfoMap.get(key));
-			}
+//			for (String key : chatInfoMap.keySet()) {
+//				DocumentReference nycRef = db.collection("messages").document(key);
+//				batch.set(nycRef, chatInfoMap.get(key));
+//			}
+			DocumentReference nycRef = db.collection("messages").document(new Date().toString());
+			batch.set(nycRef, chatInfoMap);
 			ApiFuture<List<WriteResult>> future = batch.commit();
 			for (WriteResult result :future.get()) {
 			  System.out.println("Update time : " + result.getUpdateTime());

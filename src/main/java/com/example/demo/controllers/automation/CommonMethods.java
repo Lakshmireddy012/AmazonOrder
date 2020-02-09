@@ -214,7 +214,7 @@ public class CommonMethods {
 			if(isShipped) {
 				trackPackageButton.get(0).click();
 				forceWait((long) 2000);
-				List<WebElement> trackingNUmber=getAllElements(driver, wait, By.xpath("//a[contains(.,'Numéro de suivi')]"));
+				List<WebElement> trackingNUmber=getAllElements(driver, wait, By.xpath("//div[@class='a-fixed-right-grid-col'][contains(.,'Numéro de suivi')]"));
 				List<WebElement> shippedWithElement=getAllElements(driver, wait, By.xpath("//h1[contains(.,'Expédié avec')  or contains(.,'Livraison par')]"));
 				if(trackingNUmber.size()>0) {
 					String trackingNumberText=trackingNUmber.get(0).getText();

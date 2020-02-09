@@ -78,8 +78,7 @@ public class FnacTrackingNumber {
 				} catch (Exception e) {
 					System.out.println("error "+e);
 					
-					//amazonLogin();
-					commonMethods.prompt("Resume after manual operation");
+					isLoginRequested();
 					// repeat if first attempt fails
 					driver.get(trackingUrl+orderNumbersMap.get(orderNumber).trim());
 					commonMethods.getOrderDetails(orderNumber, driver, wait, loggerMsg, logger, orderNumbersStatusMap);
@@ -203,5 +202,24 @@ public class FnacTrackingNumber {
 			System.out.println("---------**** completed pushing to fnac ****---------------");
 		}
 	}
+	
+	public void isLoginRequested() {
+		List<WebElement> passwordElements=commonMethods.getAllElements(driver, wait, By.id("ap_password"));
+		if(passwordElements.size()>0) {
+			passwordElements.get(0).sendKeys(password);
+		}
+		List<WebElement> signInSubmitElements=commonMethods.getAllElements(driver, wait, By.id("signInSubmit"));
+		if(signInSubmitElements.size()>0) {
+			signInSubmitElements.get(0).click();
+		}
+		commonMethods.forceWait((long) 2000);
+		// verification requested
+		List<WebElement> cartCountElements = commonMethods.getAllElements(driver, wait, By.xpath("//h1[contains(.,'Vérification')]"));
+		List<WebElement> continueButton = commonMethods.getAllElements(driver, wait, By.id("continue"));
+		if (continueButton.size() != 0 || cartCountElements.size()!=0) {
+			commonMethods.prompt("Get the code and push it please and click resume");
+		}
+	}
+
 
 }

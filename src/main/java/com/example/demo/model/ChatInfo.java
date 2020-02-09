@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import java.util.Date;
 import java.util.List;
 
 public class ChatInfo {
@@ -8,11 +9,12 @@ public class ChatInfo {
 	String name;
 	String relatedOrder;
 	String date;
+	Date instertedDate;
 	public String getOrderNumber() {
 		return orderNumber;
 	}
 	public ChatInfo(String orderNumber, String subject, String name, String relatedOrder, String date,
-			List<Message> messages) {
+			List<Message> messages,Date instertedDate) {
 		super();
 		this.orderNumber = orderNumber;
 		this.subject = subject;
@@ -20,6 +22,7 @@ public class ChatInfo {
 		this.relatedOrder = relatedOrder;
 		this.date = date;
 		this.messages = messages;
+		this.instertedDate = instertedDate;
 	}
 	public void setOrderNumber(String orderNumber) {
 		this.orderNumber = orderNumber;

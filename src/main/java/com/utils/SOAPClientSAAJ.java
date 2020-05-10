@@ -63,14 +63,15 @@ public class SOAPClientSAAJ {
 //		} catch (JSONException je) {
 //			System.out.println(je.toString());
 //		}
-		JSONObject xmlJSONObj = getOrdersByOrderID("19112111488UFVA");
-		JSONObject orderInfo = xmlJSONObj.getJSONObject("s:Envelope").getJSONObject("s:Body")
-				.getJSONObject("GetOrderListResponse").getJSONObject(("GetOrderListResult")).getJSONObject("OrderList")
-				.getJSONObject("Order");
-		System.out.println("orderInfo" + orderInfo);
+//		JSONObject xmlJSONObj = getOrdersByOrderID("2003291151GJE4F");
+//		JSONObject orderInfo = xmlJSONObj.getJSONObject("s:Envelope").getJSONObject("s:Body")
+//				.getJSONObject("GetOrderListResponse").getJSONObject(("GetOrderListResult")).getJSONObject("OrderList")
+//				.getJSONObject("Order");
+//		System.out.println("orderInfo" + orderInfo);
 		// getAllOrdersByStatus("WaitingForShipmentAcceptation");
-
-		setTrackingNumber(orderInfo, "6G01040125425", "La Poste");
+//		JSONObject orderInfo=getAllOrdersByStatus("WaitingForSellerAcceptation");
+//		System.out.println("orderInfo"+orderInfo);
+//		changeStatus(orderInfo);
 		// getAllOrders();
 	}
 
@@ -168,7 +169,7 @@ public class SOAPClientSAAJ {
 		if (type == 1 || type == 3 || type == 4) {
 			soapBodyElem = soapBody.addChildElement("GetOrderList");
 		}
-		if (type == 2) {
+		if (type == 2 || type == 5) {
 			soapBodyElem = soapBody.addChildElement("ValidateOrderList");
 		}
 		// *******************************common header start
@@ -323,6 +324,71 @@ public class SOAPClientSAAJ {
 			SOAPElement trackingUrl = validateOrder.addChildElement("TrackingUrl");
 			trackingUrl.setAttribute(i_nil, "true");
 		}
+		
+		if(type ==5) {
+
+			String orderNumberVal = orderInfo.get("OrderNumber").toString();
+			String orderStateVal =orderInfo.get("OrderState").toString();
+//			String trackingNumberVal = orderInfo.get("trackingNumber").toString();
+//			String carrierStringVal = orderInfo.get("carrierString").toString();
+
+			SOAPElement validateOrderListMessage = soapBodyElem.addChildElement("validateOrderListMessage");
+			validateOrderListMessage.addNamespaceDeclaration("i", myNamespaceURI2);
+			SOAPElement orderList = validateOrderListMessage.addChildElement("OrderList");
+			SOAPElement validateOrder = orderList.addChildElement("ValidateOrder");
+			SOAPElement carrierName = validateOrder.addChildElement("CarrierName");
+			carrierName.addTextNode("CarrierName");
+
+			SOAPElement orderLineList = validateOrder.addChildElement("OrderLineList");
+			Object orderLineListJavaObject = orderInfo.getJSONObject("OrderLineList").get("OrderLine");
+			// if orderline is one object
+			if (orderLineListJavaObject instanceof JSONObject) {
+				JSONObject orderLineObject = (JSONObject) orderLineListJavaObject;
+				String acceptationStateVal = orderLineObject.get("AcceptationState").toString();
+				String productConditionVal = orderLineObject.get("ProductCondition").toString();
+				String sellerProductIdVal = orderLineObject.get("SellerProductId").toString();
+				System.out
+						.println("values" + acceptationStateVal + " " + productConditionVal + " " + sellerProductIdVal);
+				SOAPElement validateOrderLine = orderLineList.addChildElement("ValidateOrderLine");
+				SOAPElement acceptationState = validateOrderLine.addChildElement("AcceptationState");
+				acceptationState.addTextNode("AcceptedBySeller");
+				SOAPElement productCondition = validateOrderLine.addChildElement("ProductCondition");
+				productCondition.addTextNode(productConditionVal);
+				SOAPElement sellerProductId = validateOrderLine.addChildElement("SellerProductId");
+				sellerProductId.addTextNode(sellerProductIdVal);
+			} else {
+				// if orderline is array of object
+				JSONArray orderLineArrayObject = ((JSONArray) orderLineListJavaObject);
+				for (int i = 0; i < orderLineArrayObject.length(); i++) {
+					JSONObject orderLineObject = orderLineArrayObject.getJSONObject(i);
+					String acceptationStateVal = orderLineObject.get("AcceptationState").toString();
+					String productConditionVal = orderLineObject.get("ProductCondition").toString();
+					String sellerProductIdVal = orderLineObject.get("SellerProductId").toString();
+					System.out.println(
+							"values" + acceptationStateVal + " " + productConditionVal + " " + sellerProductIdVal);
+					
+					if(sellerProductIdVal!=null && !sellerProductIdVal.trim().isEmpty()) {
+						SOAPElement validateOrderLine = orderLineList.addChildElement("ValidateOrderLine");
+						SOAPElement acceptationState = validateOrderLine.addChildElement("AcceptationState");
+						acceptationState.addTextNode(orderStateVal);
+						SOAPElement productCondition = validateOrderLine.addChildElement("ProductCondition");
+						productCondition.addTextNode(productConditionVal);
+						SOAPElement sellerProductId = validateOrderLine.addChildElement("SellerProductId");
+						sellerProductId.addTextNode(sellerProductIdVal);
+					}
+				}
+			}
+
+			SOAPElement orderNumber = validateOrder.addChildElement("OrderNumber");
+			orderNumber.addTextNode(orderNumberVal);
+			SOAPElement orderState = validateOrder.addChildElement("OrderState");
+			orderState.addTextNode(orderStateVal);
+			SOAPElement trackingNumber = validateOrder.addChildElement("TrackingNumber");
+			trackingNumber.addTextNode("TrackingNumber");
+			SOAPElement trackingUrl = validateOrder.addChildElement("TrackingUrl");
+			trackingUrl.setAttribute(i_nil, "true");
+		
+		}
 
 		// to print
 //		DOMSource source = new DOMSource(soapBody);
@@ -425,5 +491,30 @@ public class SOAPClientSAAJ {
 		}
 		return xmlJSONObj;
 	}
+	
+	public static JSONObject changeStatus(JSONObject orderInfo) {
+		String str = callSoapWebService(soapEndpointUrl, soapAction, 5, null, orderInfo);// request api to get the new																					// orders
+		System.out.println("FINISH" + str);
+		JSONObject xmlJSONObj = new JSONObject();
+		try {
+			xmlJSONObj = XML.toJSONObject(str);
+			System.out.println("xmlJSONObj " + xmlJSONObj);
+		} catch (JSONException je) {
+			System.out.println(je.toString());
+		}
+		return xmlJSONObj;
+	}
+	
+	public static void acceptOrRejectOrder(String orderNumber,String state) {
+		
+		JSONObject xmlJSONObj = getOrdersByOrderID(orderNumber);
+		JSONObject orderInfo = xmlJSONObj.getJSONObject("s:Envelope").getJSONObject("s:Body")
+				.getJSONObject("GetOrderListResponse").getJSONObject(("GetOrderListResult")).getJSONObject("OrderList")
+				.getJSONObject("Order");
+		System.out.println("orderInfo" + orderInfo);
+		orderInfo.put("OrderState", state);
+		changeStatus(orderInfo);
+	}
+
 
 }

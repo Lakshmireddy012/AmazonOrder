@@ -32,7 +32,6 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.example.demo.service.SOAPClientSAAJ;
-import com.opencsv.CSVReader;
 import com.utils.MyFormatter;
 
 
@@ -243,5 +242,20 @@ public class CommonMethods {
 			}
 		}
 		logger.info(loggerMsg);
+	}
+    
+    public void rakutenLogin(WebDriver driver, WebDriverWait wait) {
+    	String amazonPropFilePath = "files/rakutencredentials.properties";
+    	Properties prop = loadProps(amazonPropFilePath);
+		String username = prop.getProperty("username");
+		String password = prop.getProperty("password");
+		try {
+			waitAndGet(driver, wait, By.xpath("//*[@id='cnilBanner']//span[contains(.,'OK')]")).click();;
+			waitAndGet(driver, wait, By.id("auth_user_identifier")).sendKeys(username);
+			waitAndGet(driver, wait, By.id("userpassword")).sendKeys(password);
+			waitAndGet(driver, wait, By.name("sbtn_login")).click();
+		} catch (Exception e) {
+			rakutenLogin(driver, wait);
+		}
 	}
 }
